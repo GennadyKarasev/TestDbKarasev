@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -20,13 +21,23 @@ namespace TestDbKarasev.Controllers
             _context = context;
         }
 
-        // GET: Products
         public async Task<IActionResult> Index()
         {
             return View(await _context.Product.ToListAsync());
         }
 
-        // GET: Products/Details/5
+        [HttpPost, ActionName("G_Index_s")]
+        public async Task<IActionResult> Index (String search)
+        {
+            var products = from m in _context.Product
+                           select m;
+
+            if (!String.IsNullOrEmpty(search))
+                products = products.Where(s => s.Description == search); 
+            return View(await products.ToListAsync()); 
+        }
+
+        [HttpGet, ActionName("G_Details")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -44,16 +55,13 @@ namespace TestDbKarasev.Controllers
             return View(product);
         }
 
-        // GET: Products/Create
+        [HttpPost]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost, ActionName("G_Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Name,Description")] Product product)
         {
@@ -66,7 +74,7 @@ namespace TestDbKarasev.Controllers
             return View(product);
         }
 
-        // GET: Products/Edit/5
+        [HttpPut, ActionName("G_Edit")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -80,34 +88,8 @@ namespace TestDbKarasev.Controllers
                 return NotFound();
             }
             return View(product);
-        }
-
-        /*
-         * •	POST-метод получения списка изделий по переданному фильтру (по наименованию изделия). 
-•	GET-метод получения изделия по переданному идентификатору
-•	POST-метод добавления нового изделия
-•	PUT-метод редактирования существующего изделия
-•	DELETE-метод удаления существующего изделия по указанному идентификатору изделия
-
-         * 
-         */
+        }    
        
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult<Product>> FilterByName (Product product)
-        {
-            try { }
-            catch (Exception e)
-            {
-                return StatusCode (StatusCodes.Status500InternalServerError , "Ошибка получения данных из базы")
-            }
-        }
-
-
-        // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description")] Product product)
@@ -140,12 +122,12 @@ namespace TestDbKarasev.Controllers
             return View(product);
         }
 
-        // GET: Products/Delete/5
+        [HttpDelete]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             var product = await _context.Product
@@ -158,8 +140,8 @@ namespace TestDbKarasev.Controllers
             return View(product);
         }
 
-        // POST: Products/Delete/5
-        [HttpPost, ActionName("Delete")]
+        
+        [HttpPost, ActionName("G_Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -168,6 +150,7 @@ namespace TestDbKarasev.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        
 
         private bool ProductExists(int id)
         {
